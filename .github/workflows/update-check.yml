@@ -1,0 +1,72 @@
+name: Check Upstream VSCodium Release
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Every day at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for new VSCodium release
+        id: check_release
+        run: |
+          LATEST_VER=$(curl -s https://api.github.com/repos/VSCodium/vscodium/releases/latest | grep '"tag_name":' | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+          CURRENT_VER=$(grep '^pkgver=' PKGBUILD | head -n1 | cut -d= -f2)
+          echo "latest_ver=$LATEST_VER" >> $GITHUB_OUTPUT
+          echo "current_ver=$CURRENT_VER" >> $GITHUB_OUTPUT
+          if [ "$LATEST_VER" != "$CURRENT_VER" ] && [ -n "$LATEST_VER" ]; then
+            echo "has_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_update=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update PKGBUILD and .SRCINFO
+        if: steps.check_release.outputs.has_update == 'true'
+        run: |
+          LATEST_VER="${{ steps.check_release.outputs.latest_ver }}"
+          echo "Updating to version $LATEST_VER"
+
+          sed -i "s/^pkgver=.*/pkgver=$LATEST_VER/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+
+          SHA_URL="https://github.com/VSCodium/vscodium/releases/download/${LATEST_VER}/VSCodium-linux-x64-${LATEST_VER}.tar.gz.sha256"
+          NEW_SHA=$(curl -sL "$SHA_URL" | head -n1 | awk '{print $1}')
+
+          python3 -c "
+          import re
+          with open('PKGBUILD') as f:
+              c = f.read()
+          c = re.sub(r\"sha256sums=\(\s*'[a-f0-9]{64}'\", f\"sha256sums=(\n    '$NEW_SHA'\", c, count=1)
+          with open('PKGBUILD', 'w') as f:
+              f.write(c)
+          "
+
+          # Update .SRCINFO
+          python3 -c "
+          import re
+          with open('.SRCINFO') as f:
+              s = f.read()
+          s = re.sub(r'pkgver = .*', f'pkgver = $LATEST_VER', s)
+          s = re.sub(r'pkgrel = .*', 'pkgrel = 1', s)
+          s = re.sub(r'sha256sums = [a-f0-9]{64}', f'sha256sums = $NEW_SHA', s, count=1)
+          s = re.sub(r'/download/[^/]+/', f'/download/$LATEST_VER/', s)
+          s = re.sub(r'-[0-9\.]+\.tar\.gz', f'-$LATEST_VER.tar.gz', s)
+          with open('.SRCINFO', 'w') as f:
+              f.write(s)
+          "
+
+      - name: Commit and push changes
+        if: steps.check_release.outputs.has_update == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add PKGBUILD .SRCINFO
+          git commit -m "Auto-update VSCodium to ${{ steps.check_release.outputs.latest_ver }}"
+          git push
