@@ -59,7 +59,14 @@ if [ -f "$PKG_JSON.bak" ]; then
     mv -f "$PKG_JSON.bak" "$PKG_JSON"
 fi
 
-# 7. Remove user desktop files
+# 7. Restore system desktop files
+for f in /usr/share/applications/vscodium.desktop /usr/share/applications/vscodium-wayland.desktop; do
+    if [ -f "$f.bak" ]; then
+        mv -f "$f.bak" "$f"
+    fi
+done
+
+# 8. Remove user desktop files
 USER_APPS_DIR="$TARGET_HOME/.local/share/applications"
 rm -f "$USER_APPS_DIR/code.desktop"
 rm -f "$USER_APPS_DIR/codium.desktop"
@@ -67,7 +74,14 @@ rm -f "$USER_APPS_DIR/vscodium.desktop"
 rm -f "$USER_APPS_DIR/vscodium-wayland.desktop"
 rm -f "$USER_APPS_DIR/vscodium-uri-handler.desktop"
 
-# 8. Refresh caches
+# 9. Clean up mimeapps.list
+MIMEAPPS="$TARGET_HOME/.config/mimeapps.list"
+if [ -f "$MIMEAPPS" ]; then
+    sed -i '/vscodium\.desktop/d' "$MIMEAPPS"
+    sed -i '/vscodium-wayland\.desktop/d' "$MIMEAPPS"
+fi
+
+# 10. Refresh caches
 gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
 gtk-update-icon-cache -q /usr/share/icons/Papirus 2>/dev/null || true
 

@@ -96,7 +96,25 @@ if [ -f "$PKG_JSON" ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 7. Install user desktop entries
+# 7. Hide system-level stock VSCodium desktop files from menus & 'Open With'
+# ------------------------------------------------------------------------------
+echo "==> Hiding stock VSCodium entries from /usr/share/applications..."
+for f in /usr/share/applications/vscodium.desktop /usr/share/applications/vscodium-wayland.desktop; do
+    if [ -f "$f" ]; then
+        if [ ! -f "$f.bak" ]; then
+            cp -a "$f" "$f.bak"
+        fi
+        sed -i '/^MimeType=/d' "$f"
+        if ! grep -q "^NoDisplay=" "$f"; then
+            sed -i '/^\[Desktop Entry\]/a NoDisplay=true' "$f"
+        else
+            sed -i 's/^NoDisplay=.*/NoDisplay=true/' "$f"
+        fi
+    fi
+done
+
+# ------------------------------------------------------------------------------
+# 8. Install user desktop entries
 # ------------------------------------------------------------------------------
 USER_APPS_DIR="$TARGET_HOME/.local/share/applications"
 echo "==> Installing desktop files to $USER_APPS_DIR..."
@@ -111,7 +129,23 @@ done
 chown -R "$TARGET_USER:$TARGET_USER" "$USER_APPS_DIR" 2>/dev/null || true
 
 # ------------------------------------------------------------------------------
-# 8. Refresh desktop and icon databases
+# 9. Clean up mimeapps.list to remove unwanted associations
+# ------------------------------------------------------------------------------
+MIMEAPPS="$TARGET_HOME/.config/mimeapps.list"
+if [ -f "$MIMEAPPS" ]; then
+    echo "==> Updating [Removed Associations] in mimeapps.list..."
+    if ! grep -q "\[Removed Associations\]" "$MIMEAPPS"; then
+        printf "\n[Removed Associations]\ninode/directory=vscodium.desktop;vscodium-wayland.desktop;codium.desktop;\ntext/plain=vscodium.desktop;vscodium-wayland.desktop;codium.desktop;\n" >> "$MIMEAPPS"
+    else
+        if ! grep -q "inode/directory=.*vscodium\.desktop" "$MIMEAPPS"; then
+            sed -i '/\[Removed Associations\]/a inode/directory=vscodium.desktop;vscodium-wayland.desktop;codium.desktop;\ntext/plain=vscodium.desktop;vscodium-wayland.desktop;codium.desktop;' "$MIMEAPPS"
+        fi
+    fi
+    chown "$TARGET_USER:$TARGET_USER" "$MIMEAPPS" 2>/dev/null || true
+fi
+
+# ------------------------------------------------------------------------------
+# 10. Refresh desktop and icon databases
 # ------------------------------------------------------------------------------
 echo "==> Refreshing icon and desktop databases..."
 gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
@@ -130,4 +164,5 @@ fi
 echo "===================================================================="
 echo " Installation completed successfully!"
 echo " VSCodium now uses VS Code naming, icons, and custom wrapper."
+echo " Duplicate Open-With entries have been eliminated."
 echo "===================================================================="
