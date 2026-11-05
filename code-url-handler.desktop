@@ -2,7 +2,7 @@
 Name=Code URL
 Comment=Code Editing. Redefined.
 GenericName=Text Editor
-Exec=/usr/local/bin/codium --open-url %U
+Exec=codium --open-url %U
 Icon=vscode
 Type=Application
 NoDisplay=true

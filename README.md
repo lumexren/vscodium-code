@@ -1,33 +1,52 @@
 # VSCodium to VSCode (Linux & Wayland Desktop Integration)
 
-This repository transforms **VSCodium** on Linux (especially with KDE Plasma / GNOME on Wayland or X11) into a clean, seamless **VS Code** desktop experience.
+This repository transforms **VSCodium** on Linux into a clean, seamless **VS Code** desktop experience.
 
-It fixes the notorious Linux window manager issue where launching customized `code.desktop` entries still displays the VSCodium logo in docks, taskbars, and window switchers instead of the VS Code icon.
+It can be installed either directly as an **Arch Linux / Pacman replacement package** (`makepkg -si`) or via the standalone **`install.sh`** script.
 
 ---
 
-## 🌟 What This Does
+## 🌟 Key Features
 
-1. **Custom Wrapper (`/usr/local/bin/codium` & `/usr/local/bin/code`)**:
-   - Supports reading custom Electron flags from `~/.config/code-flags.conf` and `~/.config/codium-flags.conf`.
-   - Properly forwards Wayland, GPU acceleration, and Ozone flags to the Electron process.
-   - Provides `/usr/local/bin/code` command in the terminal.
+1. **Pacman Drop-in Replacement (`vscodium-code-bin`)**:
+   - `provides=('vscode' 'codium' 'vscodium' 'vscodium-bin' 'visual-studio-code-bin')`
+   - `conflicts=('vscodium' 'vscodium-bin' 'codium')`
+   - `replaces=('vscodium')`
+   - Replaces stock `vscodium` packages cleanly without breaking dependencies (such as `vscodium-marketplace`).
+   - Managed 100% by pacman: no manual `/usr/local` files or orphaned entries.
 
-2. **Accurate Window Matching & Desktop Entries**:
-   - Creates `code.desktop` (named **Code**, with VS Code icon).
-   - Generates matching `codium.desktop` and `vscodium.desktop` entries with `StartupWMClass=codium` so KWin and GNOME Shell reliably attach running windows to the VS Code icon instead of falling back to VSCodium branding.
-   - Hides duplicate stock entries with `NoDisplay=true`.
+2. **Custom Flags Wrapper (`/usr/bin/codium`, `/usr/bin/code`)**:
+   - Properly loads Electron/Chromium flags from `~/.config/code-flags.conf` and `~/.config/codium-flags.conf`.
+   - Supports Wayland (`--ozone-platform=wayland`), VAAPI hardware acceleration, and custom Electron parameters.
 
-3. **Complete Icon Theming**:
-   - Updates Electron's internal window icon (`resources/linux/code.png`).
-   - Updates `/usr/share/pixmaps/`.
-   - Links scalable hicolor and Papirus icon themes so any fallback queries for `vscodium` or `codium` always resolve to the VS Code logo.
+3. **No Clutter in Menus or "Open With..."**:
+   - Only a single **Code** desktop entry is registered for file associations.
+   - Eliminates duplicate entries ("VSCodium - Wayland", multiple "Code" listings) in Dolphin and file managers.
+
+4. **Complete VS Code Icon Theming**:
+   - Patches internal Electron window icon (`resources/linux/code.png`).
+   - Installs high-resolution SVG and PNG icons across `hicolor` and pixmaps.
+   - Sets Wayland `desktopName` and `StartupWMClass` to ensure docks, taskbars, and Alt+Tab switchers display the VS Code logo.
 
 ---
 
 ## 🚀 Installation
 
-Clone this repository and run the installer with root privileges:
+### Option 1: Arch Linux Pacman Package (Recommended)
+
+Build and install directly with pacman / makepkg:
+
+```bash
+git clone https://github.com/<your-username>/vscodium-to-vscode.git
+cd vscodium-to-vscode
+makepkg -si
+```
+
+Pacman will prompt to replace `vscodium` and install `vscodium-code-bin`.
+
+### Option 2: Standalone Script (All Distributions)
+
+If you already have VSCodium installed and just want to apply the customizations on top:
 
 ```bash
 git clone https://github.com/<your-username>/vscodium-to-vscode.git
@@ -35,11 +54,7 @@ cd vscodium-to-vscode
 sudo ./install.sh
 ```
 
----
-
-## 🧹 Uninstallation
-
-To revert all changes and restore original stock VSCodium branding and files:
+To revert:
 
 ```bash
 sudo ./uninstall.sh
@@ -50,19 +65,16 @@ sudo ./uninstall.sh
 ## 📂 Project Structure
 
 ```
-├── bin/
-│   └── codium              # Wrapper script with flag-loading support
-├── desktop/
-│   ├── code.desktop        # Main user desktop entry
-│   ├── codium.desktop      # WM matching desktop entry
-│   ├── vscodium.desktop    # Overriding stock desktop entry
-│   ├── vscodium-uri-handler.desktop
-│   └── vscodium-wayland.desktop
-├── icons/
-│   ├── vscode.svg          # Official VS Code SVG vector logo
-│   └── vscode_1024.png     # 1024x1024 high-res PNG logo
-├── install.sh              # One-command installer
-├── uninstall.sh            # Safe uninstaller with backup restoration
+├── PKGBUILD                    # Arch Linux package recipe (replaces vscodium)
+├── .SRCINFO                    # Generated package metadata for AUR
+├── vscodium-code-bin.install   # Post-install icon & desktop cache triggers
+├── codium                      # Custom flags-aware wrapper
+├── code.desktop                # Main desktop entry
+├── code-url-handler.desktop    # URI handler desktop entry
+├── vscode.svg                  # Official VS Code vector logo
+├── vscode_1024.png             # High-res 1024x1024 icon
+├── install.sh                  # Standalone installer
+├── uninstall.sh                # Standalone uninstaller
 └── README.md
 ```
 

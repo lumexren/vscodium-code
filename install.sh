@@ -24,7 +24,7 @@ echo "==> Installing vscodium-to-vscode for user: $TARGET_USER ($TARGET_HOME)"
 # 1. Install wrapper script and symlink
 # ------------------------------------------------------------------------------
 echo "==> Installing /usr/local/bin/codium wrapper..."
-install -m 755 "$SCRIPT_DIR/bin/codium" /usr/local/bin/codium
+install -m 755 "$SCRIPT_DIR/codium" /usr/local/bin/codium
 ln -sf /usr/local/bin/codium /usr/local/bin/code
 
 # ------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ if [ -d "$VSC_LINUX_RES" ]; then
     if [ ! -f "$VSC_LINUX_RES/code.png.bak" ] && [ -f "$VSC_LINUX_RES/code.png" ]; then
         cp -a "$VSC_LINUX_RES/code.png" "$VSC_LINUX_RES/code.png.bak"
     fi
-    cp "$SCRIPT_DIR/icons/vscode_1024.png" "$VSC_LINUX_RES/code.png"
+    cp "$SCRIPT_DIR/vscode_1024.png" "$VSC_LINUX_RES/code.png"
 fi
 
 # ------------------------------------------------------------------------------
@@ -47,9 +47,9 @@ mkdir -p /usr/share/pixmaps
 if [ ! -f /usr/share/pixmaps/vscodium.png.bak ] && [ -f /usr/share/pixmaps/vscodium.png ]; then
     cp -a /usr/share/pixmaps/vscodium.png /usr/share/pixmaps/vscodium.png.bak
 fi
-cp "$SCRIPT_DIR/icons/vscode_1024.png" /usr/share/pixmaps/vscodium.png
-cp "$SCRIPT_DIR/icons/vscode_1024.png" /usr/share/pixmaps/code.png
-cp "$SCRIPT_DIR/icons/vscode_1024.png" /usr/share/pixmaps/vscode.png
+cp "$SCRIPT_DIR/vscode_1024.png" /usr/share/pixmaps/vscodium.png
+cp "$SCRIPT_DIR/vscode_1024.png" /usr/share/pixmaps/code.png
+cp "$SCRIPT_DIR/vscode_1024.png" /usr/share/pixmaps/vscode.png
 
 # ------------------------------------------------------------------------------
 # 4. Update hicolor icon theme
@@ -60,9 +60,9 @@ mkdir -p "$HICOLOR_DIR"
 if [ ! -f "$HICOLOR_DIR/vscodium.svg.bak" ] && [ -f "$HICOLOR_DIR/vscodium.svg" ]; then
     cp -a "$HICOLOR_DIR/vscodium.svg" "$HICOLOR_DIR/vscodium.svg.bak"
 fi
-cp "$SCRIPT_DIR/icons/vscode.svg" "$HICOLOR_DIR/vscode.svg"
-cp "$SCRIPT_DIR/icons/vscode.svg" "$HICOLOR_DIR/vscodium.svg"
-cp "$SCRIPT_DIR/icons/vscode.svg" "$HICOLOR_DIR/codium.svg"
+cp "$SCRIPT_DIR/vscode.svg" "$HICOLOR_DIR/vscode.svg"
+cp "$SCRIPT_DIR/vscode.svg" "$HICOLOR_DIR/vscodium.svg"
+cp "$SCRIPT_DIR/vscode.svg" "$HICOLOR_DIR/codium.svg"
 
 # ------------------------------------------------------------------------------
 # 5. Update Papirus icon theme (if installed)
@@ -120,10 +120,8 @@ USER_APPS_DIR="$TARGET_HOME/.local/share/applications"
 echo "==> Installing desktop files to $USER_APPS_DIR..."
 mkdir -p "$USER_APPS_DIR"
 
-for desktop_file in "$SCRIPT_DIR/desktop/"*.desktop; do
-    fname=$(basename "$desktop_file")
-    install -m 644 "$desktop_file" "$USER_APPS_DIR/$fname"
-done
+install -m 644 "$SCRIPT_DIR/code.desktop" "$USER_APPS_DIR/code.desktop"
+install -m 644 "$SCRIPT_DIR/code-url-handler.desktop" "$USER_APPS_DIR/code-url-handler.desktop"
 
 # Ensure correct file ownership for the user
 chown -R "$TARGET_USER:$TARGET_USER" "$USER_APPS_DIR" 2>/dev/null || true
