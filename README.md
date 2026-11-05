@@ -37,8 +37,8 @@ It can be installed either directly as an **Arch Linux / Pacman replacement pack
 Build and install directly with pacman / makepkg:
 
 ```bash
-git clone https://github.com/<your-username>/vscodium-to-vscode.git
-cd vscodium-to-vscode
+git clone https://github.com/lumexren/vscodium-code.git
+cd vscodium-code
 makepkg -si
 ```
 
@@ -49,8 +49,8 @@ Pacman will prompt to replace `vscodium` and install `vscodium-code-bin`.
 If you already have VSCodium installed and just want to apply the customizations on top:
 
 ```bash
-git clone https://github.com/<your-username>/vscodium-to-vscode.git
-cd vscodium-to-vscode
+git clone https://github.com/lumexren/vscodium-code.git
+cd vscodium-code
 sudo ./install.sh
 ```
 

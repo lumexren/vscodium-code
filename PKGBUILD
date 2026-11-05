@@ -6,7 +6,7 @@ pkgver=1.143.17232
 pkgrel=1
 pkgdesc="VSCodium repackaged with full VS Code branding, clean desktop integration, and flags wrapper"
 arch=('x86_64')
-url="https://github.com/VSCodium/vscodium"
+url="https://github.com/lumexren/vscodium-code"
 license=('MIT')
 depends=(
     'fontconfig' 'libxtst' 'gtk3' 'cairo' 'alsa-lib' 'nss' 'gcc-libs' 'libnotify' 'libxss'
